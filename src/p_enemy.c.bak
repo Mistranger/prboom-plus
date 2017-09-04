@@ -1721,13 +1721,10 @@ void A_VileChase(mobj_t* actor)
        */
       corpsehit->flags =
         (info->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
-	  if (!alternative_kills_counter)
-		corpsehit->flags = corpsehit->flags | MF_RESSURECTED;//e6y
+      corpsehit->flags = corpsehit->flags | MF_RESSURECTED;//e6y
 
 		  if (!((corpsehit->flags ^ MF_COUNTKILL) & (MF_FRIEND | MF_COUNTKILL)))
 		    totallive++;
-		  if (alternative_kills_counter)
-			  totalkills++;
 		  
                   corpsehit->health = info->spawnhealth;
       P_SetTarget(&corpsehit->target, NULL);  // killough 11/98
@@ -2594,10 +2591,7 @@ void A_SpawnFly(mobj_t *mo)
   newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (mo->flags & MF_FRIEND);
 
   //e6y: monsters spawned by Icon of Sin should not be countable for total killed.
-  if (!alternative_kills_counter)
-	  newmobj->flags |= MF_RESSURECTED;
-  else
-	  totalkills++;
+  newmobj->flags |= MF_RESSURECTED;
 
   /* killough 8/29/98: add to appropriate thread */
   P_UpdateThinker(&newmobj->thinker);

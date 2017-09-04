@@ -133,9 +133,6 @@ int             displayplayer; // view being displayed
 int             gametic;
 int             basetic;       /* killough 9/29/98: for demo sync */
 int             totalkills, totallive, totalitems, totalsecret;    // for intermission
-//cybermind
-int             totaltics;
-
 int             show_alive;
 dboolean         demorecording;
 dboolean         demoplayback;
@@ -1201,14 +1198,12 @@ void G_Ticker (void)
   switch (gamestate)
     {
     case GS_LEVEL:
-	  cyb_PreDumpThings();
       P_Ticker ();
       P_WalkTicker();
       mlooky = 0;
       AM_Ticker();
       ST_Ticker ();
       HU_Ticker ();
-	  cyb_DumpThings();
       break;
 
     case GS_INTERMISSION:
@@ -1288,14 +1283,12 @@ void G_PlayerReborn (int player)
   int itemcount;
   int secretcount;
   int resurectedkillcount; //e6y
-  int deathscount;
 
   memcpy (frags, players[player].frags, sizeof frags);
   killcount = players[player].killcount;
   itemcount = players[player].itemcount;
   secretcount = players[player].secretcount;
   resurectedkillcount = players[player].resurectedkillcount; //e6y
-  deathscount = players[player].deathscount;
 
   p = &players[player];
 
@@ -1311,7 +1304,6 @@ void G_PlayerReborn (int player)
   players[player].itemcount = itemcount;
   players[player].secretcount = secretcount;
   players[player].resurectedkillcount = resurectedkillcount; //e6y
-  players[player].deathscount = deathscount;
 
   p->usedown = p->attackdown = true;  // don't do anything immediately
   p->playerstate = PST_LIVE;
@@ -1703,8 +1695,6 @@ void G_DoCompleted (void)
   }
 
   e6y_G_DoCompleted();//e6y
-  // cybermind
-  cyb_Levelstat2();
 
   WI_Start (&wminfo);
 }
@@ -1716,9 +1706,6 @@ void G_DoCompleted (void)
 void G_WorldDone (void)
 {
   gameaction = ga_worlddone;
-
-  // cybermind
-  totaltics = 0;
 
   if (secretexit)
     players[consoleplayer].didsecret = true;

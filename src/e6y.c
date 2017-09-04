@@ -60,6 +60,7 @@
 #include "doomtype.h"
 #include "doomstat.h"
 #include "d_main.h"
+#include "d_think.h"
 #include "s_sound.h"
 #include "i_system.h"
 #include "i_main.h"
@@ -71,6 +72,7 @@
 #include "i_system.h"
 #include "p_maputl.h"
 #include "p_map.h"
+#include "p_tick.h"
 #include "i_video.h"
 #include "info.h"
 #include "r_main.h"
@@ -132,6 +134,7 @@ int hudadd_crosshair_target_color;
 int hudadd_crosshair_lock_target;
 int movement_strafe50;
 int movement_shorttics;
+int movement_strafe50onturns;
 int movement_mouselook;
 int movement_mouseinvert;
 int movement_maxviewpitch;
@@ -283,6 +286,15 @@ void e6y_InitCommandLine(void)
   if ((p = M_CheckParm("-avidemo")) && (p < myargc-1))
     avi_shot_fname = myargv[p + 1];
   stats_level = M_CheckParm("-levelstat");
+  stats_level2 = M_CheckParm("-levelstat2");
+  if ((p = M_CheckParm ("-dumpthings")) && (p < myargc-1)) {
+	  FILE *f;
+
+	  dump_things = atoi(myargv[p + 1]);
+	  f = fopen("dumpthings.txt", "wb");
+	  fprintf(f, "Prboom+ dump file\n");
+	  fclose(f);
+  }
 
   // TAS-tracers
   InitTracers();
@@ -813,6 +825,10 @@ int I_MessageBox(const char* text, unsigned int type)
 }
 
 int stats_level;
+// cybermind
+int stats_level2;
+int dump_things;
+
 int numlevels = 0;
 int levels_max = 0;
 timetable_t *stats = NULL;
@@ -863,6 +879,99 @@ void e6y_G_DoCompleted(void)
   numlevels++;
 
   e6y_WriteStats();
+}
+
+// cybermind
+// Alternative levelstat with deaths and totaltime count
+void cyb_Levelstat2(void)
+{
+	int i;
+	FILE *f;
+	char str[200];
+	char map[16];
+
+	if (doSkip && (demo_stoponend || demo_warp))
+		G_SkipDemoStop();
+
+	if (!stats_level2)
+		return;
+
+	f = fopen("levelstat2.txt", "ab");
+	fprintf(f, "\r\n");
+
+	if (gamemode == commercial)
+		sprintf(map, "MAP%02i   ", gamemap);
+	else
+		sprintf(map, "E%iM%i    ", gameepisode, gamemap);
+		
+	sprintf(str, "%%s%%5d:%%02d %%5d:%%02d %%4d %%5d / %%3d / %%3d\r\n");
+
+	fprintf(f, str, map,
+		totaltics / TICRATE / 60,
+		(totaltics / TICRATE) % 60,
+		leveltime / TICRATE / 60,
+		(leveltime / TICRATE) % 60,
+		players[0].deathscount,
+		totalkills ? ((players[0].killcount - players[0].resurectedkillcount) * 100) / totalkills : 100,
+		totalitems ? (players[0].itemcount * 100) / totalitems : 100,
+		totalsecret ? (players[0].secretcount * 100) / totalsecret : 100
+	);
+
+	fclose(f);
+
+	// clean-up
+	for (i = 0; i < MAXPLAYERS; i++)
+	{
+		players[i].deathscount = 0;
+	}
+}
+
+// cybermind
+// Dump real-time thing information
+void cyb_DumpThings(void)
+{
+	FILE *f;
+	thinker_t *currentthinker = NULL;
+	int count = 0;
+
+	if (!dump_things || gametic % dump_things != 0)
+		return;
+
+	f = fopen("dumpthings.txt", "ab");
+
+	
+	
+	while ((currentthinker = P_NextThinker(currentthinker,th_all)) != NULL) {
+		if ((currentthinker->function == P_MobjThinker)) {
+			mobj_t *mobj = (mobj_t *)currentthinker;
+			if (((mobj_t *)currentthinker)->spawnpoint.type 
+				&& !(((mobj->flags & MF_COUNTKILL) || mobj->type == MT_SKULL) && (mobj->tics == -1))) {
+				++count;
+			}
+		}
+	}
+
+	currentthinker = NULL;
+	fprintf(f, "%d\n", count);
+	while ((currentthinker = P_NextThinker(currentthinker,th_all)) != NULL) {
+		if (currentthinker->function == P_MobjThinker ) {
+			mobj_t *mobj = (mobj_t *)currentthinker;
+			if (((mobj_t *)currentthinker)->spawnpoint.type 
+				&& !(((mobj->flags & MF_COUNTKILL) || mobj->type == MT_SKULL) && (mobj->tics == -1))) {
+					fprintf(f, "%d %d %d %d\n", mobj->spawnpoint.type, mobj->spawnpoint.options, mobj->spawnpoint.x, mobj->spawnpoint.y);
+			}
+		}
+	}
+
+	fclose(f);
+}
+
+void cyb_PreDumpThings(void)
+{
+	FILE *f = fopen("dumpthings.txt", "ab");
+	fprintf(f, "\r\n");
+	fprintf(f, "%d ", gametic);
+	fclose(f);
 }
 
 typedef struct tmpdata_s
@@ -1400,3 +1509,21 @@ dboolean SmoothEdges(unsigned char * buffer,int w, int h)
 #undef MSB
 #undef SOME_MASK
 //End of GZDoom code
+
+demo_comment_t *demo_comments;
+demo_comment_t *last_comment;
+
+void Cyb_AddNewComment(int tick, char* message)
+{
+	demo_comment_t *c = (demo_comment_t*)malloc(sizeof(demo_comment_t));
+	c->ticknum = tick;
+	c->message = message;
+	c->next = NULL;
+	if (last_comment) {
+		c->prev = last_comment;
+		last_comment = c;
+	} else {
+		c->prev = NULL;
+		demo_comments = last_comment = c;
+	}
+}

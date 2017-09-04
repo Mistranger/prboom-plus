@@ -240,9 +240,6 @@ default_t defaults[] =
   {"process_priority", {&process_priority},{0},0,2,def_int,ss_none},
   
   {"Misc settings",{NULL},{0},UL,UL,def_none,ss_none},
-  // cybermind
-  { "alternative_kills_counter",{ (int*)&alternative_kills_counter },{ 0 }, 0, 1, // as in ZDoom
-  def_bool,ss_none },
   {"default_compatibility_level",{(int*)&default_compatibility_level},
    {-1},-1,MAX_COMPATIBILITY_LEVEL-1,
    def_int,ss_none}, // compatibility level" - CPhipps

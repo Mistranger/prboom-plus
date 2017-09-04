@@ -770,8 +770,6 @@ static void P_KillMobj(mobj_t *source, mobj_t *target)
 
       target->flags &= ~MF_SOLID;
       target->player->playerstate = PST_DEAD;
-	  // cybermind
-	  target->player->deathscount++;
       P_DropWeapon (target->player);
 
       if (target->player == &players[consoleplayer] && (automapmode & am_active))

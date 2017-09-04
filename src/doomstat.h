@@ -222,6 +222,10 @@ extern  int displayplayer;
 extern  int totalkills, totallive;
 extern  int totalitems;
 extern  int totalsecret;
+//cybermind
+extern  int totaltics;
+extern  int alternative_kills_counter;
+
 extern  int show_alive;
 
 // Timer, for scores.
