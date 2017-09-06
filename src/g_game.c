@@ -81,10 +81,12 @@
 #include "g_game.h"
 #include "lprintf.h"
 #include "i_main.h"
+#include "i_sound.h"
 #include "i_system.h"
 #include "r_demo.h"
 #include "r_fps.h"
 #include "e6y.h"//e6y
+#include "cybermind.h"
 
 #define SAVEGAMESIZE  0x20000
 #define SAVESTRINGSIZE  24
@@ -1201,14 +1203,28 @@ void G_Ticker (void)
   switch (gamestate)
     {
     case GS_LEVEL:
-	  cyb_PreDumpThings();
+		// cybermind: record or play sound
+		if (!recordisplaying && recorddata) {
+			I_PlayRecording();
+		}
+		if (!record_sound_start) {
+			I_StartRecording();
+		}
+		if (record_sound_start) {
+			I_GrabRecording(snd_samplerate / TICRATE);
+			lprintf(LO_INFO,"Recording\n");
+		}
       P_Ticker ();
       P_WalkTicker();
       mlooky = 0;
       AM_Ticker();
       ST_Ticker ();
       HU_Ticker ();
-	  cyb_DumpThings();
+	  // cybermind
+	  if (!dump_things || gametic % dump_things != 0)
+		  return;
+	  cyb_DumpEncodePlayers(dumpFile);
+	  cyb_DumpEncodeThings(dumpFile);
       break;
 
     case GS_INTERMISSION:
@@ -3128,12 +3144,21 @@ void G_BeginRecording (void)
   // FIXME } else if (compatibility_level >= boom_compatibility_compatibility) { //e6y
   } else if (compatibility_level > boom_compatibility_compatibility) {
     byte v = 0, c = 0; /* Nominally, version and compatibility bits */
-    switch (compatibility_level) {
-    case boom_compatibility_compatibility: v = 202, c = 1; break;
-    case boom_201_compatibility: v = 201; c = 0; break;
-    case boom_202_compatibility: v = 202, c = 0; break;
-    default: I_Error("G_BeginRecording: Boom compatibility level unrecognised?");
-    }
+	// cybermind
+	longtics = M_CheckParm("-longtics");
+	if (longtics)
+	{
+		v = 215;
+		c = 0;
+	} else {
+		switch (compatibility_level) {
+		case boom_compatibility_compatibility: v = 202, c = 1; break;
+		case boom_201_compatibility: v = 201; c = 0; break;
+		case boom_202_compatibility: v = 202, c = 0; break;
+		default: I_Error("G_BeginRecording: Boom compatibility level unrecognised?");
+		}
+	}
+    
     *demo_p++ = v;
 
     // signature
@@ -3411,7 +3436,7 @@ const byte* G_ReadDemoHeaderEx(const byte *demo_p, size_t size, unsigned int par
   // BOOM's demoversion starts from 200
   if (!((demover >=   0  && demover <=   4) ||
         (demover >= 104  && demover <= 111) ||
-        (demover >= 200  && demover <= 214)))
+        (demover >= 200  && demover <= 215)))
   {
     I_Error("G_ReadDemoHeader: Unknown demo format %d.", demover);
   }
@@ -3563,6 +3588,17 @@ const byte* G_ReadDemoHeaderEx(const byte *demo_p, size_t size, unsigned int par
         longtics = 1;
 	demo_p++;
 	break;
+	  case 215: //cybermind - Boom with longtics
+		  //e6y: check for overrun
+		  if (CheckForOverrun(header_p, demo_p, size, 1, failonerror))
+			  return NULL;
+
+		  if (!*demo_p++)
+			  compatibility_level = boom_202_compatibility;
+		  else
+			  compatibility_level = boom_compatibility_compatibility;
+		  longtics = 1;
+		break;
       }
       //e6y: check for overrun
       if (CheckForOverrun(header_p, demo_p, size, 5, failonerror))

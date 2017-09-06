@@ -76,6 +76,7 @@ typedef BOOL (WINAPI *SetAffinityFunc)(HANDLE hProcess, DWORD mask);
 #include <stdlib.h>
 
 #include "e6y.h"
+#include "cybermind.h"
 
 /* Most of the following has been rewritten by Lee Killough
  *
@@ -367,12 +368,19 @@ static void I_Quit (void)
     has_exited=1;   /* Prevent infinitely recursive exits -- killough */
 
   if (has_exited == 1) {
+	  // cybermind
+	 I_ShutdownRecording();
+
     if (!demorecording)
       I_EndDoom();
     if (demorecording)
       G_CheckDemoStatus();
     M_SaveDefaults ();
     I_DemoExShutdown();
+	// cybermind
+	if (dump_things) {
+		cyb_DumpEnd(dumpFile);
+	}
   }
 }
 

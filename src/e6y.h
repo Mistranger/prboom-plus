@@ -290,12 +290,6 @@ const char* WINError(void);
 #endif
 
 extern int stats_level;
-// cybermind
-extern int stats_level2;
-extern int dump_things;
-void cyb_Levelstat2(void);
-void cyb_PreDumpThings(void);
-void cyb_DumpThings(void);
 
 void e6y_G_DoCompleted(void);
 void e6y_WriteStats(void);
@@ -363,16 +357,5 @@ dboolean SmoothEdges(unsigned char * buffer,int w, int h);
 extern int mus_extend_volume;
 void I_midiOutSetVolumes(int volume);
 #endif
-
-typedef struct demo_comment_s
-{
-	int ticknum;
-	char* message;
-	struct demo_comment_s* prev;
-	struct demo_comment_s* next;
-}demo_comment_t;
-
-extern demo_comment_t *demo_comments;
-extern demo_comment_t *last_comment;
 
 #endif

@@ -51,6 +51,7 @@
 #include "hu_stuff.h"
 #include "lprintf.h"
 #include "e6y.h"//e6y
+#include "cybermind.h"
 
 static mobj_t *current_actor;
 

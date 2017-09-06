@@ -1905,6 +1905,12 @@ static void D_DoomMainSetup(void)
   {
     autostart = true;
     G_RecordDemo(myargv[p]);
+	// cybermind
+	if ((p = M_CheckParm("-voicerecord")) && !nosfxparm)
+	{
+		I_InitRecording();
+
+	}
   }
     }
 

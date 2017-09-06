@@ -171,6 +171,9 @@ void S_Stop(void)
     for (cnum=0 ; cnum<numChannels ; cnum++)
       if (channels[cnum].sfxinfo)
         S_StopChannel(cnum);
+
+  // cybermind: stop recording
+  I_StopRecording();
 }
 
 //
@@ -356,6 +359,7 @@ void S_PauseSound(void)
   if (mus_playing && !mus_paused)
     {
       I_PauseSong(mus_playing->handle);
+	  I_PauseRecording();
       mus_paused = true;
     }
 }
@@ -369,6 +373,7 @@ void S_ResumeSound(void)
   if (mus_playing && mus_paused)
     {
       I_ResumeSong(mus_playing->handle);
+	  I_ResumeRecording();
       mus_paused = false;
     }
 }
@@ -456,6 +461,7 @@ void S_SetSfxVolume(int volume)
   if (volume < 0 || volume > 127)
     I_Error("S_SetSfxVolume: Attempt to set sfx volume at %d", volume);
   snd_SfxVolume = volume;
+  I_SetRecordingVolume(snd_SfxVolume);
 }
 
 
@@ -763,3 +769,6 @@ static int S_getChannel(void *origin, sfxinfo_t *sfxinfo, int is_pickup)
   c->is_pickup = is_pickup;         // killough 4/25/98
   return cnum;
 }
+
+
+
