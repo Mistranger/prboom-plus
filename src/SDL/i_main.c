@@ -139,10 +139,13 @@ void I_Init(void)
 //e6y
 void I_Init2(void)
 {
-  if (fastdemo)
+  if (fastdemo) {
     I_GetTime = I_GetTime_FastDemo;
-  else
-  {
+	  if (recordisplaying) {
+		  I_PauseRecording();
+
+	  }	
+  } else {
     if (realtic_clock_rate != 100)
       {
         I_GetTime_Scale = ((int_64_t) realtic_clock_rate << 24) / 100;
