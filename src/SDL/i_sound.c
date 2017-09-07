@@ -98,6 +98,7 @@ static dboolean first_sound_init = true;
 // cybermind: sound recording
 int record_sound = 0;
 int record_sound_start = 0;
+int record_sound_paused = 0;
 int post_record_sound = 0;
 SDL_AudioDeviceID record_device;
 const char *record_soundcommand;
@@ -693,11 +694,18 @@ void I_InitSound(void)
 
   sfxmutex = SDL_CreateMutex ();
 
-  recordmutex = SDL_CreateMutex();
-  record_player_init = record_player.music.init(&record_player.music, snd_samplerate);
-  if (record_player_init && recorddata && recordlen) {
-		I_RegisterRecording(recorddata, recordlen);
+  if (recorddata && recordlen) {
+	  if (!use_experimental_music) {
+		  lprintf(LO_WARN, "Demo audio playback won't work in SDL player mode\n", SAMPLECOUNT);
+	  } else {
+		  recordmutex = SDL_CreateMutex();
+		  record_player_init = record_player.music.init(&record_player.music, snd_samplerate);
+		  if (record_player_init) {
+			  I_RegisterRecording(recorddata, recordlen);
+		  }
+	  }
   }
+  
 
   // If we are using the PC speaker, we now need to initialise it.
   if (snd_pcspeaker)
@@ -1236,7 +1244,9 @@ void I_StartRecording(void)
 {
 	record_sound_start = 1;
 	SDL_ClearQueuedAudio(record_device);
-	SDL_PauseAudioDevice(record_device, 0);
+	I_ResumeRecordingAudio();
+
+	players[0].message = "Audio recording started";
 }
 
 void I_UpdateRecording(void *userdata, Uint8 *stream, int len) 
@@ -1245,8 +1255,9 @@ void I_UpdateRecording(void *userdata, Uint8 *stream, int len)
 		return;
 
 	SDL_DequeueAudio(record_device, stream, len);
-	fwrite(stream, len, 1, rawrecord);
-	fflush(rawrecord);
+	if (fwrite(stream, len, 1, rawrecord) != 1) {
+		I_Error("Error recording audio rawdata");
+	}
 }
 
 unsigned char* I_RenderRecording (void *buff, unsigned nsamp)
@@ -1272,9 +1283,27 @@ unsigned char* I_RenderRecording (void *buff, unsigned nsamp)
 	return buffer;
 }
 
+void I_PauseRecordingAudio()
+{
+	SDL_PauseAudioDevice(record_device, 1);
+	SDL_ClearQueuedAudio(record_device);
+	record_sound_paused = 1;
+}
+
+void I_ResumeRecordingAudio()
+{
+	SDL_PauseAudioDevice(record_device, 0);
+	record_sound_paused = 0;
+}
+
 void I_InitRecording()
 {
 	SDL_AudioSpec want, have;
+
+	if (!use_experimental_music) {
+		I_Error("Audio recording won't work in SDL player mode");
+		return;
+	}
 
 	SDL_zero(want);
 	want.freq = snd_samplerate;
@@ -1329,6 +1358,7 @@ void I_ShutdownRecording()
 
 		SDL_PauseAudioDevice(record_device, 1);
 		SDL_CloseAudioDevice(record_device);
+		fflush(rawrecord);
 		fclose(rawrecord);
 
 		// now convert our recording to ogg
@@ -1375,6 +1405,15 @@ void I_ShutdownRecording()
 	}
 }
 
+void I_SeekRecording(int pos)
+{
+	if (record_handle) {
+		SDL_LockMutex (recordmutex);
+		record_player.music.seek(&record_player.music, pos);
+		SDL_UnlockMutex (recordmutex);
+	}
+}
+
 void I_RegisterRecording(const void *data, size_t len)
 {
 	if (record_handle)
@@ -1412,7 +1451,7 @@ void I_PlayRecording()
 	{
 		SDL_LockMutex (recordmutex);
 		record_player.music.play (&record_player.music, record_handle, 0);
-		record_player.music.setvolume (&record_player.music, snd_SfxVolume);
+		record_player.music.setvolume (&record_player.music, snd_RecordVolume);
 		SDL_UnlockMutex (recordmutex);
 		recordisplaying = 1;
 	}

@@ -147,9 +147,18 @@ void I_Init2(void)
       {
         I_GetTime_Scale = ((int_64_t) realtic_clock_rate << 24) / 100;
         I_GetTime = I_GetTime_Scaled;
+		if (recordisplaying) {
+			I_PauseRecording();
+			
+		}	
       }
-    else
+    else {
       I_GetTime = I_GetTime_RealTime;
+	  if (recordisplaying) {
+		  I_SeekRecording(gametic);
+		  I_ResumeRecording();
+	  }
+	}
   }
   R_InitInterpolation();
   force_singletics_to = gametic + BACKUPTICS;

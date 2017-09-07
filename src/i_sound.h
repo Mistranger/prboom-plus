@@ -53,6 +53,7 @@ extern int snd_pcspeaker;
 // cybermind: sound recording stuff
 extern int record_sound;
 extern int record_sound_start;
+extern int record_sound_paused;
 extern int post_record_sound;
 extern const void *record_handle;
 extern char* recorddata;
@@ -67,6 +68,9 @@ void I_SetRecordingVolume (int volume);
 void I_StartRecording(void);
 void I_UpdateRecording(void *userdata, Uint8 *stream, int len);
 unsigned char* I_RenderRecording (void *buff, unsigned nsamp);
+void I_PauseRecordingAudio();
+void I_ResumeRecordingAudio();
+void I_SeekRecording(int pos);
 void I_RegisterRecording(const void *data, size_t len);
 void I_UnRegisterRecording();
 void I_PlayRecording();

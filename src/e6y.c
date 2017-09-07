@@ -361,6 +361,7 @@ void G_SkipDemoStop(void)
   S_Init(snd_SfxVolume, snd_MusicVolume);
   S_Stop();
   S_RestartMusic();
+  I_SeekRecording(totaldemotics);
 
 #ifdef GL_DOOM
   if (V_GetMode() == VID_MODEGL) {

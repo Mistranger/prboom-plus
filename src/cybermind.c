@@ -92,8 +92,8 @@
 
 int stats_level2;
 int dump_things;
-// cybermind
 int alternative_kills_counter;
+int demo_playvoice;
 
 inline void write2bytes(FILE *file, unsigned short data)
 {
@@ -178,7 +178,7 @@ void cyb_DumpEncodePlayers(dumpFile_t *d)
 		write4bytes(d->f, p->itemcount);
 		write4bytes(d->f, p->secretcount);
 		write4bytes(d->f, p->deathscount);
-		for (j = 0; j < NUMPOWERS; ++j) {
+		for (j = 0; j < NUMCARDS; ++j) {
 			fputc(p->cards[j], d->f);
 		}
 	}

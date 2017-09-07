@@ -113,7 +113,7 @@ void (*messageRoutine)(int response);
 /* killough 8/15/98: when changes are allowed to sync-critical variables */
 static int allow_changes(void)
 {
- return !(demoplayback || demorecording || netgame);
+ return !(record_sound || demoplayback || demorecording || netgame);
 }
 
 static void M_UpdateCurrent(default_t* def)
@@ -229,6 +229,7 @@ void M_ChangeMessages(int choice);
 void M_ChangeSensitivity(int choice);
 void M_SfxVol(int choice);
 void M_MusicVol(int choice);
+void M_RecordVol(int choice);
 /* void M_ChangeDetail(int choice);  unused -- killough */
 void M_SizeDisplay(int choice);
 void M_StartGame(int choice);
@@ -1128,6 +1129,8 @@ enum
   sfx_empty1,
   music_vol,
   sfx_empty2,
+  record_vol,
+  sfx_empty3,
   sound_end
 } sound_e;
 
@@ -1138,6 +1141,8 @@ menuitem_t SoundMenu[]=
   {2,"M_SFXVOL",M_SfxVol,'s'},
   {-1,"",0},
   {2,"M_MUSVOL",M_MusicVol,'m'},
+  {-1,"",0},
+  {2,"M_AUDVOL",M_RecordVol,'r'},
   {-1,"",0}
 };
 
@@ -1163,6 +1168,8 @@ void M_DrawSound(void)
   M_DrawThermo(SoundDef.x,SoundDef.y+LINEHEIGHT*(sfx_vol+1),16,snd_SfxVolume);
 
   M_DrawThermo(SoundDef.x,SoundDef.y+LINEHEIGHT*(music_vol+1),16,snd_MusicVolume);
+
+  M_DrawThermo(SoundDef.x,SoundDef.y+LINEHEIGHT*(record_vol+1),16,snd_RecordVolume);
 }
 
 void M_Sound(int choice)
@@ -1202,6 +1209,23 @@ void M_MusicVol(int choice)
     }
 
   S_SetMusicVolume(snd_MusicVolume /* *8 */);
+}
+
+void M_RecordVol(int choice)
+{
+	switch(choice)
+	{
+	case 0:
+		if (snd_RecordVolume)
+			snd_RecordVolume--;
+		break;
+	case 1:
+		if (snd_RecordVolume < 15)
+			snd_RecordVolume++;
+		break;
+	}
+
+	S_SetRecordVolume(snd_RecordVolume /* *8 */);
 }
 
 /////////////////////////////
@@ -3156,9 +3180,10 @@ setup_menu_t gen_settings3[] = { // General Settings screen2
   {"Overwrite Existing",          S_YESNO, m_null, G_X, G_Y+ 3*8, {"demo_overwriteexisting"}},
   {"Smooth Demo Playback",        S_YESNO, m_null, G_X, G_Y+ 4*8, {"demo_smoothturns"}, 0, 0, M_ChangeDemoSmoothTurns},
   {"Smooth Demo Playback Factor", S_NUM,   m_null, G_X, G_Y+ 5*8, {"demo_smoothturnsfactor"}, 0, 0, M_ChangeDemoSmoothTurns},
+  {"Play audio from demos",       S_YESNO, m_null, G_X, G_Y+ 6*8,   {"demo_playvoice"}},
 
-  {"Movements",                   S_SKIP|S_TITLE,m_null,G_X, G_Y+7*8},
-  {"Permanent Strafe50",          S_YESNO, m_null, G_X, G_Y+ 8*8, {"movement_strafe50"}, 0, 0, M_ChangeSpeed},
+  {"Movements",                   S_SKIP|S_TITLE,m_null,G_X, G_Y+8*8},
+  {"Permanent Strafe50",          S_YESNO, m_null, G_X, G_Y+ 9*8, {"movement_strafe50"}, 0, 0, M_ChangeSpeed},
 
   {"Mouse",                       S_SKIP|S_TITLE,m_null, G_X, G_Y+11*8},
   {"Dbl-Click As Use",            S_YESNO, m_null, G_X, G_Y+12*8, {"mouse_doubleclick_as_use"}},
@@ -4685,28 +4710,28 @@ dboolean M_Responder (event_t* ev) {
       }
 
     //e6y
-    if (ch == key_speed_default && (!netgame||demoplayback))               
+    if (ch == key_speed_default && !record_sound &&  (!netgame||demoplayback))               
     {
       realtic_clock_rate = StepwiseSum(realtic_clock_rate, 0, speed_step, 3, 10000, 100);
       I_Init2();
       // Don't eat the keypress in this case.
       // return true;
     }
-    if (ch == key_speed_up && (!netgame||demoplayback))
+    if (ch == key_speed_up && !record_sound && (!netgame||demoplayback))
     {
       realtic_clock_rate = StepwiseSum(realtic_clock_rate, 1, speed_step, 3, 10000, 100);
       I_Init2();
       // Don't eat the keypress in this case.
       // return true;
     }
-    if (ch == key_speed_down && (!netgame||demoplayback))
+    if (ch == key_speed_down && !record_sound && (!netgame||demoplayback))
     {
       realtic_clock_rate = StepwiseSum(realtic_clock_rate, -1, speed_step, 3, 10000, 100);
       I_Init2();
       // Don't eat the keypress in this case.
       // return true;
     }
-    if (ch == key_nextlevel)
+    if (ch == key_nextlevel && !record_sound)
     {
       if (demoplayback && !doSkip && singledemo)
       {

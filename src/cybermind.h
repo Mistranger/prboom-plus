@@ -37,7 +37,9 @@
 extern int stats_level2;
 extern int dump_things;
 extern  int totaltics;
+extern  int totaldemotics;
 extern  int alternative_kills_counter;
+extern int demo_playvoice;
 
 extern void cyb_Levelstat2(void);
 extern void cyb_DumpThings(void);

@@ -137,6 +137,7 @@ int             basetic;       /* killough 9/29/98: for demo sync */
 int             totalkills, totallive, totalitems, totalsecret;    // for intermission
 //cybermind
 int             totaltics;
+int             totaldemotics;
 
 int             show_alive;
 dboolean         demorecording;
@@ -1080,11 +1081,35 @@ void G_Ticker (void)
         }
     }
 
-  if (paused & 2 || (!demoplayback && menuactive && !netgame))
+  if (paused & 2 || (!demoplayback && menuactive && !netgame)) {
+	  if (record_sound_start && !record_sound_paused) {
+		  I_PauseRecordingAudio();
+	  }
     basetic++;  // For revenant tracers and RNG -- we must maintain sync
-  else {
+  } else {
+
     // get commands, check consistancy, and build new consistancy check
     int buf = (gametic/ticdup)%BACKUPTICS;
+
+	if (!netgame) {
+		// cybermind: record or play sound
+		if (!recordisplaying && recorddata && demo_playvoice) {
+			I_PlayRecording();
+		}
+		if (record_sound && !record_sound_start) {
+			I_StartRecording();
+		}
+		if (record_sound && record_sound_start) {
+			if (record_sound_paused) {
+				I_ResumeRecordingAudio();
+			}
+			I_GrabRecording(snd_samplerate / TICRATE);
+			lprintf(LO_INFO,"Recording %d\n", gametic);
+		}
+	}
+
+	++totaldemotics;
+	lprintf(LO_INFO, "%d %d %d\n", totaldemotics, totalleveltimes, gametic);
 
     for (i=0 ; i<MAXPLAYERS ; i++) {
       if (playeringame[i])
@@ -1203,17 +1228,6 @@ void G_Ticker (void)
   switch (gamestate)
     {
     case GS_LEVEL:
-		// cybermind: record or play sound
-		if (!recordisplaying && recorddata) {
-			I_PlayRecording();
-		}
-		if (!record_sound_start) {
-			I_StartRecording();
-		}
-		if (record_sound_start) {
-			I_GrabRecording(snd_samplerate / TICRATE);
-			lprintf(LO_INFO,"Recording\n");
-		}
       P_Ticker ();
       P_WalkTicker();
       mlooky = 0;
@@ -3712,6 +3726,7 @@ void G_DoPlayDemo(void)
     usergame = false;
 
     demoplayback = true;
+	totaldemotics = 0;
     R_SmoothPlaying_Reset(NULL); // e6y
   }
   else

@@ -36,6 +36,7 @@
 
 #include "musicplayer.h"
 #include "vorbisplayer.h"
+#include "doomdef.h"
 
 #ifndef HAVE_LIBVORBISFILE
 #include <string.h>
@@ -431,6 +432,13 @@ static void vorb_render (music_player_t *music, void *dest, unsigned nsamp)
   I_ResampleStream (&vrb->music, dest, nsamp, vorb_render_ex, vrb->vorb_samplerate_in, vrb->vorb_samplerate_target);
 }
 
+static void vorb_seek (struct music_player_s *music, int pos)
+{
+	vorb_player_t *vrb = (vorb_player_t*)music;
+
+	ov_time_seek(&vrb->vf, (double)pos / (double)TICRATE);
+}
+
 
 vorb_player_t vorb_player =
 {
@@ -445,6 +453,7 @@ vorb_player_t vorb_player =
   vorb_play,
   vorb_stop,
   vorb_render,
+  vorb_seek,
   0,
   0,
   0,
@@ -466,6 +475,7 @@ vorb_player_t record_player  =
 	vorb_play,
 	vorb_stop,
 	vorb_render,
+	vorb_seek,
 	0,
 	0,
 	0,

@@ -160,6 +160,7 @@ GRAPHICS += graphics/m_horsen.ppm
 GRAPHICS += graphics/m_versen.ppm
 GRAPHICS += graphics/prboom.ppm
 GRAPHICS += graphics/m_accel.ppm
+GRAPHICS += graphics/m_audvol.ppm
 GRAPHICS += graphics/m_loksen.ppm
 endif
 

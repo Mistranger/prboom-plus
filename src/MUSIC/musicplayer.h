@@ -82,6 +82,9 @@ typedef struct music_player_s
   // s16 stereo, with samplerate as specified in init.  player needs to be able to handle
   // just about anything for nsamp.  render can be called even during pause+stop.
   void (*render)(struct music_player_s *music, void *dest, unsigned nsamp);
+
+  // Seeking function to set position of audio (in tics)
+  void (*seek)(struct music_player_s *music, int pos);
   short *sin;
   unsigned sinsamp;
   unsigned remainder;
