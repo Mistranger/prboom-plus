@@ -371,7 +371,7 @@ default_t defaults[] =
   {"samplerate",{&snd_samplerate},{22050},11025,48000, def_int,ss_none},
   {"sfx_volume",{&snd_SfxVolume},{8},0,15, def_int,ss_none},
   {"music_volume",{&snd_MusicVolume},{8},0,15, def_int,ss_none},
-  {"record_volume",{&snd_RecordVolume},{8},0,15, def_int,ss_none},
+  {"record_volume",{&snd_RecordVolume},{15},0,15, def_int,ss_none},
   {"mus_pause_opt",{&mus_pause_opt},{1},0,2, // CPhipps - music pausing
    def_int, ss_none}, // 0 = kill music when paused, 1 = pause music, 2 = let music continue
   {"snd_channels",{&default_numChannels},{32},1,32,
@@ -989,7 +989,8 @@ default_t defaults[] =
 
   // cybermind
   {"Audio recording settings",{NULL},{0},UL,UL,def_none,ss_none},
-  {"record_soundcommand",{NULL, &record_soundcommand},{0,"oggenc2 -r -R %s -C 1 -q 5 - -o oggrecord.ogg"},UL,UL,def_str,ss_none},
+  {"record_soundcommand",{NULL, &record_soundcommand},{0,"oggenc2 -r -R %s -C 1 -q 1 - -o oggrecord.ogg"},UL,UL,def_str,ss_none},
+  {"record_remove_tempfiles", {&record_remove_tempfiles},{1},0,1,def_bool,ss_none},
 
   {"Prboom-plus video settings",{NULL},{0},UL,UL,def_none,ss_none},
   {"sdl_video_window_pos", {NULL,&sdl_video_window_pos}, {0,"center"},UL,UL,

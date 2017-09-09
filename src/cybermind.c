@@ -90,6 +90,7 @@
 #include "e6y.h"
 #include "cybermind.h"
 
+const int dump_things_version = 1;
 int stats_level2;
 int dump_things;
 int alternative_kills_counter;
@@ -129,6 +130,7 @@ dumpFile_t* cyb_DumpStart(const char *file)
 	fputc(0x52, dumpFile->f);
 	fputc(0x42, dumpFile->f);
 	fputc(0x44, dumpFile->f);
+	write4bytes(dumpFile->f, dump_things_version);
 	write4bytes(dumpFile->f, dump_things);
 	return dumpFile;
 }
@@ -151,33 +153,32 @@ void cyb_DumpEncodePlayers(dumpFile_t *d)
 	for (i = 0; i < MAXPLAYERS; ++i) {
 		player_t *p = &players[i];
 		if (!playeringame[i]) {
-			fputc(0, d->f);
+			fputc(0xFF, d->f);
 			continue;
 		}
-		fputc(1, d->f);
 		fputc(i, d->f);
 		// coordinates
-		write4bytes(d->f, p->mo->x);
-		write4bytes(d->f, p->mo->y);
-		write4bytes(d->f, p->mo->z);
+		write2bytes(d->f, p->mo->x >> 16);
+		write2bytes(d->f, p->mo->y >> 16);
+		write2bytes(d->f, p->mo->z >> 16);
 		// health and armor
-		write4bytes(d->f, p->health);
-		write4bytes(d->f, p->armorpoints);
-		write4bytes(d->f, p->armortype);
+		write2bytes(d->f, p->health);
+		write2bytes(d->f, p->armorpoints);
+		fputc(p->armortype, d->f);
 		// all ammo stock
 		for (j = 0; j < NUMAMMO; ++j) {
-			write4bytes(d->f, p->ammo[j]);
-			write4bytes(d->f, p->maxammo[j]);
+			write2bytes(d->f, p->ammo[j]);
+			write2bytes(d->f, p->maxammo[j]);
 		}
 		// powers
 		for (j = 0; j < NUMPOWERS; ++j) {
-			write4bytes(d->f, p->powers[j]);
+			write2bytes(d->f, p->powers[j]);
 		}
 		
-		write4bytes(d->f, p->killcount);
-		write4bytes(d->f, p->itemcount);
-		write4bytes(d->f, p->secretcount);
-		write4bytes(d->f, p->deathscount);
+		write2bytes(d->f, p->killcount);
+		write2bytes(d->f, p->itemcount);
+		write2bytes(d->f, p->secretcount);
+		write2bytes(d->f, p->deathscount);
 		for (j = 0; j < NUMCARDS; ++j) {
 			fputc(p->cards[j], d->f);
 		}
@@ -190,10 +191,10 @@ void cyb_DumpSpawn(dumpFile_t *d, mobj_t *s)
 	++d->recordCount;
 	write2bytes(d->f, (short)DE_SPAWN);
 	write4bytes(d->f, totaltics);
-	write4bytes(d->f, s->x);
-	write4bytes(d->f, s->y);
-	write4bytes(d->f, s->z);
-	write4bytes(d->f, s->type);
+	write2bytes(d->f, s->x >> FRACBITS);
+	write2bytes(d->f, s->y >> FRACBITS);
+	write2bytes(d->f, s->z >> FRACBITS);
+	fputc((unsigned char)s->type, d->f);
 
 }
 
@@ -205,7 +206,7 @@ void cyb_DumpDamage(dumpFile_t *d, mobj_t *target, mobj_t *inflictor, int damage
 	write4bytes(d->f, totaltics);
 	cyb_DumpEncodeThing(d, target);
 	cyb_DumpEncodeThing(d, inflictor);
-	write4bytes(d->f, damage);
+	write2bytes(d->f, damage);
 }
 
 
@@ -221,15 +222,19 @@ void cyb_DumpKill(dumpFile_t *d, mobj_t *target, mobj_t *who)
 
 void cyb_DumpEncodeThing(dumpFile_t * d, mobj_t *mobj)
 {
-	++d->recordCount;
+	if (!mobj) {
+		write4bytes(d->f, -2);
+		return;
+	}
+	
 	write4bytes(d->f, mobj->index);
-	write4bytes(d->f, mobj->x);
-	write4bytes(d->f, mobj->y);
-	write4bytes(d->f, mobj->z);
-	write4bytes(d->f, mobj->angle);
-	write4bytes(d->f, mobj->type);
-	write4bytes(d->f, mobj->info->doomednum);
-	write4bytes(d->f, mobj->health);
+	write2bytes(d->f, mobj->x >> FRACBITS);
+	write2bytes(d->f, mobj->y >> FRACBITS);
+	write2bytes(d->f, mobj->z >> FRACBITS);
+	write2bytes(d->f, mobj->angle / ANG1);
+	fputc((unsigned char)mobj->type, d->f);
+	write2bytes(d->f, (short)mobj->info->doomednum);
+	write2bytes(d->f, (short)mobj->health);
 	write2bytes(d->f, mobj->spawnpoint.x);
 	write2bytes(d->f, mobj->spawnpoint.y);
 	write2bytes(d->f, mobj->spawnpoint.angle);

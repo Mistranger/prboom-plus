@@ -850,7 +850,8 @@ static void R_DemoEx_AddRecording(wadtbl_t *wadtbl)
 	buf = (unsigned char*)malloc(fsize);
 	fread(buf, fsize, 1, f);
 	fclose(f);
-	//remove("oggrecord.ogg");
+	if (record_remove_tempfiles)
+		remove("oggrecord.raw");
 
 	W_AddLump(wadtbl, DEMOEX_RECORDING_LUMPNAME, buf, fsize);
 }

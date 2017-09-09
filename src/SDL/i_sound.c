@@ -109,6 +109,7 @@ static const void *record_handle = NULL;
 char* recorddata = NULL;
 int         recordlen = 0;
 int recordisplaying = 0;
+int record_remove_tempfiles;
 
 // Needed for calling the actual sound output.
 static int SAMPLECOUNT =   512;
@@ -1366,7 +1367,8 @@ void I_ShutdownRecording()
 		if (!my_popen3 (&recordpipe))
 		{
 			lprintf (LO_ERROR, "I_ShutdownRecording: record pipe failed\n");
-			//unlink("rawrecord.raw");
+			if (record_remove_tempfiles)
+				remove("rawrecord.raw");
 			post_record_sound = 0;
 			return;
 		}
@@ -1383,7 +1385,9 @@ void I_ShutdownRecording()
 		buf = (unsigned char*)malloc(fsize);
 		fread(buf, fsize, 1, rawrecord);
 		fclose(rawrecord);
-		//remove("rawrecord.raw");
+
+		if (record_remove_tempfiles)
+			remove("rawrecord.raw");
 
 		if (fwrite (buf, fsize, 1, recordpipe.f_stdin) != 1) {
 			lprintf(LO_WARN, "I_ShutdownRecording: error writing recordpipe.\n");
@@ -1417,7 +1421,7 @@ void I_SeekRecording(int pos)
 void I_RegisterRecording(const void *data, size_t len)
 {
 	if (record_handle)
-		I_UnRegisterRecording (0);
+		I_UnRegisterRecording();
 
 	if (record_player_init)
 	{

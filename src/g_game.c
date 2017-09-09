@@ -1152,6 +1152,15 @@ void G_Ticker (void)
         }
     }
 
+	// cybermind
+    if (dump_things) {
+	    ticcmd_t *cmd = &players[0].cmd;
+		if (players[0].mo && gametic % (dump_things / (cmd->forwardmove + 1) + 5) == 0) {
+			cyb_DumpEncodePlayers(dumpFile);
+		}
+    }
+	
+
     // check for special buttons
     for (i=0; i<MAXPLAYERS; i++) {
       if (playeringame[i])
@@ -1237,7 +1246,6 @@ void G_Ticker (void)
 	  // cybermind
 	  if (!dump_things || gametic % dump_things != 0)
 		  return;
-	  cyb_DumpEncodePlayers(dumpFile);
 	  cyb_DumpEncodeThings(dumpFile);
       break;
 

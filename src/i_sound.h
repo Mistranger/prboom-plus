@@ -59,6 +59,7 @@ extern const void *record_handle;
 extern char* recorddata;
 extern int recordlen;
 extern int recordisplaying;
+extern int record_remove_tempfiles;
 // this one recieves raw PCM sound on stdin
 extern const char *record_soundcommand;
 void I_InitRecording(void);
